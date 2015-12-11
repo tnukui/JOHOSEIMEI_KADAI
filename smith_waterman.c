@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include<stdlib.h>
 #include <unistd.h>
-
+#include<string.h>
 
 void sizeof_string(FILE* fpx, FILE* fpy, long* x_num, long* y_num)
 {
@@ -49,7 +49,7 @@ void file_open(FILE** fpx, FILE** fpy, char* file_x_name, char* file_y_name)
     *fpy=fopen(file_y_name, "r");
     
     if(*fpx==NULL || *fpy==NULL){
-        printf("file cannot open");
+        printf("file cannot open\n");
         exit(0);
     }
 }
@@ -88,8 +88,8 @@ double smith_waterman(long x_num, long y_num, char* str_x, char* str_y, double m
         }
     }
     
-    for(i=0; i<x_num; i++){
-        for(j=0; j<y_num; j++){
+    for(i=0; i<x_num+1; i++){
+        for(j=0; j<y_num+1; j++){
             printf("%.2f ",matrix[i][j]);
         }
         printf("\n");
@@ -103,9 +103,40 @@ double smith_waterman(long x_num, long y_num, char* str_x, char* str_y, double m
 
 int main(int argc, char* argv[])
 {
+    int opt;
+    char* file_x_name="testfile_x.txt";
+    char* file_y_name="testfile_y.txt";
+    double match_score=1.0;
+    double mismatch_score=-2.0;
+    double gap_score=-1.3;
     
+    while((opt=getopt(argc, argv, "d:q:m:n:g:")) != -1){
+        switch(opt){
+            case 'd': //d:database file name
+                file_x_name=optarg;
+                break;
+                
+            case 'q': //q:query file name
+                file_y_name=optarg;
+                break;
+            case 'm': //m:match score
+                match_score=atof(optarg);
+                break;
+            case 'n': //n:mismatch score
+                mismatch_score=atof(optarg);
+                if(mismatch_score>0) mismatch_score*=(-1);
+                break;
+            case 'g': //g:gap score
+                gap_score=atof(optarg);
+                if(gap_score>0) gap_score*=(-1);
+                break;
+        }
+        
+    }
+
+
     FILE* fpx=NULL, *fpy=NULL;
-    file_open(&fpx, &fpy, "test_x.txt", "test_y.txt");
+    file_open(&fpx, &fpy, file_x_name, file_y_name);
     long x_num=0, y_num=0;
     
     sizeof_string(fpx, fpy, &x_num, &y_num);
@@ -114,11 +145,11 @@ int main(int argc, char* argv[])
     printf("x_num=%ld y_num=%ld\n", x_num, y_num);
     char *str_x=(char*)calloc(x_num+1, sizeof(char));
     char *str_y=(char*)calloc(y_num+1, sizeof(char));
-    file_open(&fpx, &fpy, "test_x.txt", "test_y.txt");
+    file_open(&fpx, &fpy, file_x_name, file_y_name);
     file_read(fpx, fpy, x_num, y_num, str_x, str_y);
     fclose(fpx); fclose(fpy);
     printf("%s\n%s\n", str_x, str_y);
-    smith_waterman(x_num, y_num, str_x, str_y, 1, -2, -1.5);
+    smith_waterman(x_num, y_num, str_x, str_y, match_score, mismatch_score, gap_score);
     
     
     
